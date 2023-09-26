@@ -16,3 +16,8 @@ $ go run main.go               # file
 $ go run .                     # path
 $ go run my.url/my_module_name # module
 ```
+
+## project structure
+* cmd: application specific code
+* pkg: non application specific code, like validation helpers and SQL model.
+* ui: user-interface asset (non-golang)
