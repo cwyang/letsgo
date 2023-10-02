@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/cwyang/letsgo/pkg/models/mysql"
+
 	_ "github.com/go-sql-driver/mysql"
 	// we just use init() func only
 )
@@ -16,6 +18,7 @@ import (
 type application struct {
 	errorLog *log.Logger
 	infoLog  *log.Logger
+	notes    *mysql.NotesModel
 }
 
 func main() {
@@ -42,6 +45,7 @@ func main() {
 	app := &application{
 		errorLog: errorLog,
 		infoLog:  infoLog,
+		notes:    &mysql.NotesModel{DB: db},
 	}
 
 	// err := http.ListenAndServe(*addr, mux)
