@@ -24,21 +24,13 @@ func main() {
 		errorLog: errorLog,
 		infoLog:  infoLog,
 	}
-	mux := http.NewServeMux()
-	// longer URL patterns are matched
-	mux.HandleFunc("/", app.home)         // catch all
-	mux.HandleFunc("/note", app.showNote) // note: `/note/` means `/foo/*`
-	mux.HandleFunc("/note/create", app.createNote)
-
-	fileServer := http.FileServer(http.Dir("./ui/static/"))
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
-
+	
 	// err := http.ListenAndServe(*addr, mux)
 	// redirect http.Server log to standard error
 	srv := &http.Server{
 		Addr:     *addr,
 		ErrorLog: errorLog,
-		Handler:  mux,
+		Handler:  app.routes(),
 	}
 	infoLog.Printf("server started on %s", *addr)
 	err := srv.ListenAndServe()
