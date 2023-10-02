@@ -1,10 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
+
+	"github.com/cwyang/letsgo/pkg/models"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -12,6 +15,16 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		app.notFound(w)
 		return
 	}
+	n, err := app.notes.Latest()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	for _, note := range n {
+		fmt.Fprintf(w, "%v\n", note)
+	}
+	return
+	
 	files := []string{
 		"./ui/html/home.page.tmpl",
 		"./ui/html/base.layout.tmpl",
@@ -34,8 +47,18 @@ func (app *application) showNote(w http.ResponseWriter, r *http.Request) {
 		app.notFound(w)
 		return
 	}
-	//w.Write([]byte("Here comes the note!"))
-	fmt.Fprintf(w, "note #%d", id)
+
+	n, err := app.notes.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	fmt.Fprintf(w, "%v", n);
 }
 func (app *application) createNote(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -44,5 +67,16 @@ func (app *application) createNote(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
-	w.Write([]byte("Created a new note!"))
+
+	title := "Quick Brown Fox"
+	content := "Jumps over the\nLittle Lazy Dog!"
+	expires := "7"
+
+	id, err := app.notes.Insert(title, content, expires)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	// redirect to the relevant page
+	http.Redirect(w, r, fmt.Sprintf("/note?id=%d", id), http.StatusSeeOther)
 }
