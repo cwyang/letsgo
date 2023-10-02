@@ -2,9 +2,13 @@ package main
 
 import (
 	"net/http"
+
+	"github.com/justinas/alice"	// for chaining middleware
 )
 
 func (app *application) routes() http.Handler {
+	standardMiddleware := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
+	
 	mux := http.NewServeMux()
 	// longer URL patterns are matched
 	mux.HandleFunc("/", app.home)         // catch all
@@ -14,5 +18,5 @@ func (app *application) routes() http.Handler {
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	return app.recoverPanic(app.logRequest(secureHeaders(mux)))
+	return standardMiddleware.Then(mux)
 }
