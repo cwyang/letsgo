@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"runtime/debug"
@@ -33,9 +34,16 @@ func (app *application) render(
 		app.serverError(w, fmt.Errorf("The template %s not found", name))
 		return
 	}
-	err := ts.Execute(w, td)
+
+	// render to a buffer
+	buf := new(bytes.Buffer)
+	
+	err := ts.Execute(buf, td)
 	if err != nil {
 		app.serverError(w, err)
+		return
 	}
+	
+	buf.WriteTo(w)
 }
 	
