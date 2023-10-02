@@ -14,8 +14,8 @@
 	{{range .Notes}}
 	<tr>
 	  <td><a href='/note?id={{.ID}}'>{{.Title}}</a></td>
-	  <td>{{.Created}}</td>
-	  <td>{{.ID}}</td>
+	  <td>{{humanDate .Created}}</td>
+	  <td>#{{.ID}}</td>
 	</tr>
 	{{end}}
       </table>

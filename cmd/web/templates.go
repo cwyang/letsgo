@@ -3,13 +3,24 @@ package main
 import (
 	"html/template"
 	"path/filepath"
+	"time"
 	
 	"github.com/cwyang/letsgo/pkg/models"
 )
 
 type templateData struct {
-	Note *models.Note
-	Notes []*models.Note
+	CurrentYear int
+	Note        *models.Note
+	Notes       []*models.Note
+}
+
+func humanDate(t time.Time) string {
+	return t.Format("02 Jan 2020 at 11:22")
+}
+
+// init a template.FuncMap object & store it in a global var.
+var functions = template.FuncMap{
+	"humanDate": humanDate,
 }
 
 func newTemplateCache(dir string) (map[string]*template.Template, error) {
@@ -23,7 +34,8 @@ func newTemplateCache(dir string) (map[string]*template.Template, error) {
 	for _, page := range pages {
 		name := filepath.Base(page)
 
-		ts, err := template.ParseFiles(page)
+		// ts, err := template.ParseFiles(page)
+		ts, err := template.New(name).Funcs(functions).ParseFiles(page)
 		if err != nil {
 			return nil, err
 		}
