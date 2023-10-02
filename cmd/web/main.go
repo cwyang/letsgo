@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -19,6 +20,7 @@ type application struct {
 	errorLog *log.Logger
 	infoLog  *log.Logger
 	notes    *mysql.NotesModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -42,10 +44,16 @@ func main() {
 	}
 	defer db.Close()
 
+	templateCache, err := newTemplateCache("./ui/html/")
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+	
 	app := &application{
 		errorLog: errorLog,
 		infoLog:  infoLog,
 		notes:    &mysql.NotesModel{DB: db},
+		templateCache: templateCache,
 	}
 
 	// err := http.ListenAndServe(*addr, mux)

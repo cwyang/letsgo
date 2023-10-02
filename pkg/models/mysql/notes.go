@@ -27,12 +27,12 @@ func (m *NotesModel) Insert(title, content, expires string) (int, error) {
 	return int(id), nil
 }
 
-func (m *NotesModel) Get(id int) (*models.Notes, error) {
+func (m *NotesModel) Get(id int) (*models.Note, error) {
 	stmt := `select id, title, content, created, expires from notes
                  where expires > utc_timestamp() and id = ?`
 	row := m.DB.QueryRow(stmt, id)
 
-	n := &models.Notes{}
+	n := &models.Note{}
 
 	err := row.Scan(&n.ID, &n.Title, &n.Content, &n.Created, &n.Expires)
 	if err != nil {
@@ -46,7 +46,7 @@ func (m *NotesModel) Get(id int) (*models.Notes, error) {
 }
 
 // 10 most recently creates notes
-func (m *NotesModel) Latest() ([]*models.Notes, error) {
+func (m *NotesModel) Latest() ([]*models.Note, error) {
 	stmt := `select id, title, content, created, expires from notes
                  where expires > utc_timestamp() order by created desc limit 10`
 
@@ -56,10 +56,10 @@ func (m *NotesModel) Latest() ([]*models.Notes, error) {
 	}
 	defer rows.Close()
 
-	notes := []*models.Notes{} // slice of object pointers
+	notes := []*models.Note{} // slice of object pointers
 
 	for rows.Next() {
-		n := &models.Notes{}
+		n := &models.Note{}
 		err = rows.Scan(&n.ID, &n.Title, &n.Content, &n.Created, &n.Expires)
 		if err != nil {
 			return nil, err

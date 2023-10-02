@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
 
@@ -20,25 +19,10 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
-	for _, note := range n {
-		fmt.Fprintf(w, "%v\n", note)
-	}
-	return
-	
-	files := []string{
-		"./ui/html/home.page.tmpl",
-		"./ui/html/base.layout.tmpl",
-		"./ui/html/footer.partial.tmpl",
-	}
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-	err = ts.Execute(w, nil)
-	if err != nil {
-		app.serverError(w, err)
-	}
+
+	app.render(w, r, "home.page.tmpl", &templateData{
+		Notes: n,
+	})
 }
 
 func (app *application) showNote(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +42,9 @@ func (app *application) showNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "%v", n);
+	app.render(w, r, "show.page.tmpl", &templateData{
+		Note: n,
+	})
 }
 func (app *application) createNote(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
