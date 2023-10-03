@@ -4,12 +4,14 @@ import (
 	"html/template"
 	"path/filepath"
 	"time"
-	
+
+	"github.com/cwyang/letsgo/pkg/forms"
 	"github.com/cwyang/letsgo/pkg/models"
 )
 
 type templateData struct {
 	CurrentYear int
+	Form        *forms.Form
 	Note        *models.Note
 	Notes       []*models.Note
 }
