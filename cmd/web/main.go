@@ -68,7 +68,7 @@ func main() {
 
 	tlsConfig := &tls.Config{
 		PreferServerCipherSuites: true,
-		CurvePreferences:        []tls.CurveID{tls.X25519, tls.CurveP256},
+		CurvePreferences:         []tls.CurveID{tls.X25519, tls.CurveP256},
 		CipherSuites: []uint16{
 			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
 			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
@@ -87,6 +87,10 @@ func main() {
 		ErrorLog:  errorLog,
 		Handler:   app.routes(),
 		TLSConfig: tlsConfig,
+		// timeouts
+		IdleTimeout:  time.Minute,	// go default keepalive 180s
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 	infoLog.Printf("server started on %s", *addr)
 	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
