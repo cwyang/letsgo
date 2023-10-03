@@ -40,7 +40,7 @@ func (app *application) showNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.render(w, r, "show.page.tmpl", &templateData{
-		Note: n,
+		Note:  n,
 	})
 }
 func (app *application) createNoteForm(w http.ResponseWriter, r *http.Request) {
@@ -74,6 +74,9 @@ func (app *application) createNote(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
+
+	app.session.Put(r, "flash", "Note created successfully!")
+
 	// redirect to the relevant page
 	http.Redirect(w, r, fmt.Sprintf("/note/%d", id), http.StatusSeeOther)
 }

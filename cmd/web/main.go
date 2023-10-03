@@ -8,17 +8,20 @@ import (
 	"log"
 	"net/http"
 	"os"
-
+	"time"
+	
 	"github.com/cwyang/letsgo/pkg/models/mysql"
 
 	_ "github.com/go-sql-driver/mysql"
 	// we just use init() func only
+	"github.com/golangcollege/sessions"
 )
 
 // application-wide dependency
 type application struct {
 	errorLog *log.Logger
 	infoLog  *log.Logger
+	session  *sessions.Session
 	notes    *mysql.NotesModel
 	templateCache map[string]*template.Template
 }
@@ -33,6 +36,7 @@ func main() {
 			"MySQL data source name")
 	}
 	addr := flag.String("addr", ":4000", "HTTP listen port")
+	secret := flag.String("secret", "12345678901234567890123456789012", "Secret key")
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
@@ -48,10 +52,13 @@ func main() {
 	if err != nil {
 		errorLog.Fatal(err)
 	}
-	
+
+	session := sessions.New([]byte(*secret))
+	session.Lifetime = 12 * time.Hour
 	app := &application{
 		errorLog: errorLog,
 		infoLog:  infoLog,
+		session:  session,
 		notes:    &mysql.NotesModel{DB: db},
 		templateCache: templateCache,
 	}
