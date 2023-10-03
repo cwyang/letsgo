@@ -40,7 +40,7 @@ func (app *application) showNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.render(w, r, "show.page.tmpl", &templateData{
-		Note:  n,
+		Note: n,
 	})
 }
 func (app *application) createNoteForm(w http.ResponseWriter, r *http.Request) {
@@ -79,4 +79,55 @@ func (app *application) createNote(w http.ResponseWriter, r *http.Request) {
 
 	// redirect to the relevant page
 	http.Redirect(w, r, fmt.Sprintf("/note/%d", id), http.StatusSeeOther)
+}
+
+func (app *application) signupUserForm(w http.ResponseWriter, r *http.Request) {
+	app.render(w, r, "signup.page.tmpl", &templateData{
+		Form: forms.New(nil),
+	})
+}
+
+func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form := forms.New(r.PostForm)
+	form.Required("name", "email", "password")
+	form.MaxLength("name", 255)
+	form.MaxLength("email", 255)
+	form.MatchesPattern("email", forms.EmailRX)
+	form.MinLength("password", 10)
+	if !form.Valid() {
+		app.render(w, r, "signup.page.tmpl", &templateData{
+			Form: form,
+		})
+		return
+	}
+	err = app.users.Insert(form.Get("name"),
+		form.Get("email"),
+		form.Get("password"))
+	if err != nil {
+		if errors.Is(err, models.ErrDuplicateEmail) {
+			form.Errors.Add("email", "Duplicate Email")
+			app.render(w, r, "signup.page.tmpl", &templateData{
+				Form: form,
+			})
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+	app.session.Put(r, "flash", "You are signed up. Please log in.")
+
+	// redirect to the relevant page
+	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+}
+func (app *application) loginUserForm(w http.ResponseWriter, r *http.Request) {
+}
+func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
+}
+func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
 }

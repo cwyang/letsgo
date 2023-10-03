@@ -23,8 +23,9 @@ type application struct {
 	errorLog      *log.Logger
 	infoLog       *log.Logger
 	session       *sessions.Session
-	notes         *mysql.NotesModel
 	templateCache map[string]*template.Template
+	notes         *mysql.NoteModel
+	users         *mysql.UserModel
 }
 
 func main() {
@@ -62,8 +63,9 @@ func main() {
 		errorLog:      errorLog,
 		infoLog:       infoLog,
 		session:       session,
-		notes:         &mysql.NotesModel{DB: db},
 		templateCache: templateCache,
+		notes:         &mysql.NoteModel{DB: db},
+		users:         &mysql.UserModel{DB: db},
 	}
 
 	tlsConfig := &tls.Config{
@@ -88,7 +90,7 @@ func main() {
 		Handler:   app.routes(),
 		TLSConfig: tlsConfig,
 		// timeouts
-		IdleTimeout:  time.Minute,	// go default keepalive 180s
+		IdleTimeout:  time.Minute, // go default keepalive 180s
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}

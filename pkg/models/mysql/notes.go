@@ -7,11 +7,11 @@ import (
 	"github.com/cwyang/letsgo/pkg/models"
 )
 
-type NotesModel struct {
+type NoteModel struct {
 	DB *sql.DB
 }
 
-func (m *NotesModel) Insert(title, content, expires string) (int, error) {
+func (m *NoteModel) Insert(title, content, expires string) (int, error) {
 	stmt := `insert into notes (title, content, created, expires)
 		values(?, ?, utc_timestamp(), date_add(utc_timestamp(), interval ? day))`
 	result, err := m.DB.Exec(stmt, title, content, expires)
@@ -27,7 +27,7 @@ func (m *NotesModel) Insert(title, content, expires string) (int, error) {
 	return int(id), nil
 }
 
-func (m *NotesModel) Get(id int) (*models.Note, error) {
+func (m *NoteModel) Get(id int) (*models.Note, error) {
 	stmt := `select id, title, content, created, expires from notes
                  where expires > utc_timestamp() and id = ?`
 	row := m.DB.QueryRow(stmt, id)
@@ -46,7 +46,7 @@ func (m *NotesModel) Get(id int) (*models.Note, error) {
 }
 
 // 10 most recently creates notes
-func (m *NotesModel) Latest() ([]*models.Note, error) {
+func (m *NoteModel) Latest() ([]*models.Note, error) {
 	stmt := `select id, title, content, created, expires from notes
                  where expires > utc_timestamp() order by created desc limit 10`
 
