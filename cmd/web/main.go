@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"flag"
 	"fmt"
@@ -9,7 +10,7 @@ import (
 	"net/http"
 	"os"
 	"time"
-	
+
 	"github.com/cwyang/letsgo/pkg/models/mysql"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -19,10 +20,10 @@ import (
 
 // application-wide dependency
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	session  *sessions.Session
-	notes    *mysql.NotesModel
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	session       *sessions.Session
+	notes         *mysql.NotesModel
 	templateCache map[string]*template.Template
 }
 
@@ -55,23 +56,40 @@ func main() {
 
 	session := sessions.New([]byte(*secret))
 	session.Lifetime = 12 * time.Hour
+	session.Secure = true
+
 	app := &application{
-		errorLog: errorLog,
-		infoLog:  infoLog,
-		session:  session,
-		notes:    &mysql.NotesModel{DB: db},
+		errorLog:      errorLog,
+		infoLog:       infoLog,
+		session:       session,
+		notes:         &mysql.NotesModel{DB: db},
 		templateCache: templateCache,
 	}
 
+	tlsConfig := &tls.Config{
+		PreferServerCipherSuites: true,
+		CurvePreferences:        []tls.CurveID{tls.X25519, tls.CurveP256},
+		CipherSuites: []uint16{
+			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+			tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+		},
+		MinVersion: tls.VersionTLS12,
+		MaxVersion: tls.VersionTLS13,
+	}
 	// err := http.ListenAndServe(*addr, mux)
 	// redirect http.Server log to standard error
 	srv := &http.Server{
-		Addr:     *addr,
-		ErrorLog: errorLog,
-		Handler:  app.routes(),
+		Addr:      *addr,
+		ErrorLog:  errorLog,
+		Handler:   app.routes(),
+		TLSConfig: tlsConfig,
 	}
 	infoLog.Printf("server started on %s", *addr)
-	err = srv.ListenAndServe()
+	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
 	errorLog.Fatal(err)
 }
 
