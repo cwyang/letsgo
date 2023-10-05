@@ -11,6 +11,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/cwyang/letsgo/pkg/models"
 	"github.com/cwyang/letsgo/pkg/models/mysql"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -27,8 +28,18 @@ type application struct {
 	infoLog       *log.Logger
 	session       *sessions.Session
 	templateCache map[string]*template.Template
-	notes         *mysql.NoteModel
-	users         *mysql.UserModel
+	notes interface {
+		Insert(string, string, string) (int, error)
+		Get(int) (*models.Note, error)
+		Latest() ([]*models.Note, error)
+	}
+	users interface {
+		Insert(string, string, string) error
+		Authenticate(string, string) (int, error)
+		Get(int) (*models.User, error)
+	}
+	//notes         *mysql.NoteModel
+	//users         *mysql.UserModel
 }
 
 func main() {
