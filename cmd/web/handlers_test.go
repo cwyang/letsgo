@@ -133,3 +133,36 @@ func TestSignupUser(t *testing.T) {
 		})
 	}
 }
+
+func TestCreateNoteForm(t *testing.T) {
+	app := newTestApplication(t)
+	ts := newTestServer(t, app.routes())
+	defer ts.Close()
+
+	t.Run("unauthenticated", func(t *testing.T) {
+		code, headers, _ := ts.get(t, "/note/create")
+		if code != http.StatusSeeOther {
+			t.Errorf("want %d; got %d", http.StatusSeeOther, code)
+		}
+		if headers.Get("Location") != "/user/login" {
+			t.Errorf("want %s; got %s", "/user/login", headers.Get("Location"))
+		}
+	})
+
+	t.Run("authenticated", func(t *testing.T) {
+		_, _, body2 := ts.get(t, "/user/login")
+		csrfToken := extractCSRFToken(t, body2)
+		form := url.Values{}
+		form.Add("email", "kim@mail.com")
+		form.Add("password", "")
+		form.Add("csrf_token", csrfToken)
+
+		ts.postForm(t, "/user/login", form)
+		
+		_, _, body := ts.get(t, "/note/create")
+		target := []byte("<form action='/note/create' method='POST'>")
+		if !bytes.Contains(body, target) {
+			t.Errorf("want body to contain %q", target)
+		}
+	})
+}

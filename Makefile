@@ -5,6 +5,9 @@ all:	$(SOURCES)
 	go run ./cmd/web
 
 test:
+	go test -v -short ./cmd/web
+
+testall:
 	go test -v ./cmd/web
 
 cover:
