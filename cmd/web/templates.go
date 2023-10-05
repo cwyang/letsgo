@@ -14,6 +14,7 @@ type templateData struct {
 	Form            *forms.Form
 	Flash           string
 	IsAuthenticated bool
+	CSRFToken	string
 	Note            *models.Note
 	Notes           []*models.Note
 }
