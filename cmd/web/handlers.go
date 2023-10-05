@@ -155,8 +155,13 @@ func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
 	// redirect to the relevant page
 	http.Redirect(w, r, "/note/create", http.StatusSeeOther)
 }
+
 func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
 	app.session.Remove(r, "authenticatedUserID")
 	app.session.Put(r, "flash", "You've been logged out.")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func ping(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Pong"))
 }
