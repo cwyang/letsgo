@@ -17,6 +17,7 @@ type templateData struct {
 	CSRFToken	string
 	Note            *models.Note
 	Notes           []*models.Note
+	User		*models.User
 }
 
 func humanDate(t time.Time) string {

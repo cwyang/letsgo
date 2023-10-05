@@ -1,0 +1,25 @@
+{{template "base" .}}
+
+{{define "title"}}User {{.User.Name}}{{end}}
+
+{{define "main"}}
+  {{with .User}}
+  <div class='snippet'>
+    <div>
+    <label>Name:</label>
+      <strong>{{.Name}}</strong>
+    <div></div>
+    <label>ID:</label>
+    <span>#{{.ID}}</span>
+    <div></div>
+    <label>Email:</label>
+    <span>{{.Email}}</span>
+    <div></div>
+    <label>Active:</label>
+    <span>{{.Active}}</span>
+    </div>
+    <div class='metadata'>
+      <time>Joined at {{humanDate .Created}}</time>
+    </div>
+  {{end}}
+{{end}}

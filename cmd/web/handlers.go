@@ -169,3 +169,18 @@ func ping(w http.ResponseWriter, r *http.Request) {
 func (app *application) showAbout(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "about.page.tmpl", &templateData{})
 }
+func (app *application) userProfile(w http.ResponseWriter, r *http.Request) {
+	exists := app.session.Exists(r, "authenticatedUserID")
+	if !exists {
+		app.serverError(w, models.ErrInvalidCredentials)
+		return
+	}
+	u, err := app.users.Get(app.session.GetInt(r, "authenticatedUserID"))
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	app.render(w, r, "profile.page.tmpl", &templateData{
+		User: u,
+	})
+}
