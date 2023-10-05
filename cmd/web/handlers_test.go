@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 )
 
@@ -51,14 +52,14 @@ func TestPing2(t *testing.T) {
 	}
 }
 
-func TestShowSnippet(t *testing.T) {
+func TestShowNote(t *testing.T) {
 	app := newTestApplication(t)
 	ts := newTestServer(t, app.routes())
-	defer ts.Close();
+	defer ts.Close()
 
 	tests := []struct {
 		name string
-		url string
+		url  string
 		want int
 		body []byte
 	}{
@@ -74,6 +75,54 @@ func TestShowSnippet(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			code, _, body := ts.get(t, tt.url)
+
+			if code != tt.want {
+				t.Errorf("want %d; got %d", tt.want, code)
+			}
+			if !bytes.Contains(body, tt.body) {
+				t.Errorf("want body to contain %q", tt.body)
+			}
+		})
+	}
+}
+
+func TestSignupUser(t *testing.T) {
+	app := newTestApplication(t)
+	ts := newTestServer(t, app.routes())
+	defer ts.Close()
+
+	_, _, body := ts.get(t, "/user/signup")
+	csrfToken := extractCSRFToken(t, body)
+
+	t.Log(csrfToken) // go test -v showes test log
+
+	tests := []struct {
+		name         string
+		userName     string
+		userEmail    string
+		userPassword string
+		csrfToken    string
+		want         int
+		body         []byte
+	}{
+		{"valid sub", "Alice", "alice@mail.com", "validPa$$word", csrfToken, http.StatusSeeOther, nil},
+		{"Empty name", "", "alice@mail.com", "validPa$$word", csrfToken, http.StatusOK, []byte("must be present")},
+		{"Empty email", "Alice", "", "validPa$$word", csrfToken, http.StatusOK, []byte("must be present")},
+		{"Empty password", "Alice", "alice@mail.com", "", csrfToken, http.StatusOK, []byte("must be present")},
+		{"short password", "Alice", "alice@mail.com", "password", csrfToken, http.StatusOK, []byte("short")},	
+		{"Dup email", "Alice", "dup@mail.com", "validPa$$word", csrfToken, http.StatusOK, []byte("Duplicate")},
+		{"Invalid CSRF Token", "", "", "", "wrongToken", http.StatusBadRequest, nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			form := url.Values{}
+			form.Add("name", tt.userName)
+			form.Add("email", tt.userEmail)
+			form.Add("password", tt.userPassword)
+			form.Add("csrf_token", tt.csrfToken)
+
+			code, _, body := ts.postForm(t, "/user/signup", form)
 
 			if code != tt.want {
 				t.Errorf("want %d; got %d", tt.want, code)
