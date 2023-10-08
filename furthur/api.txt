@@ -1,0 +1,41 @@
+GET /v1/healthcheck
+    show app health and version info
+
+GET /debug/vars
+    show application metrics
+
+GET /v1/movies
+    show the details of all movies
+
+POST /v1/movies
+     create a new movie
+
+GET /v1/movies/:id
+    show the details of a specific movie
+
+PATCH /v1/movies/:id
+      update the details
+
+DELETE /v1/movies/:id
+       delete a specific movie
+
+
+POST /v1/users
+     add a new user
+
+PUT /v1/users/activated
+    activate a specified user
+
+PUT /v1/users/password
+    update the password for a specific user
+
+
+POST /v1/tokens/authentication
+     generate a new auth token
+
+POST /v1/tokens/password-reset
+     generate a new password reset token
+
+
+
+
