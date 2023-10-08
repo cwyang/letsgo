@@ -40,3 +40,6 @@ func (m *UserModel) Get(id int) (*models.User, error) {
 		return nil, models.ErrNoRecord
 	}
 }
+func (m *UserModel) ChangePassword(id int, oldpass, newpass string) error {
+	return nil
+}

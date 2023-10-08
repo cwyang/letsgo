@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
+	"fmt"
 	
 	"github.com/cwyang/letsgo/pkg/models"
 
@@ -63,8 +64,9 @@ func (m *UserModel) Authenticate(email, password string) (int, error) {
 func (m *UserModel) Get(id int) (*models.User, error) {
 	u := &models.User{}
 
-	stmt := `select id, name, email, created, active from users where id = ?`
-	err := m.DB.QueryRow(stmt, id).Scan(&u.ID, &u.Name, &u.Email, &u.Created, &u.Active)
+	stmt := `select id, name, email, hashed_password, created, active from users where id = ?`
+	err := m.DB.QueryRow(stmt, id).Scan(&u.ID, &u.Name,
+		&u.Email, &u.HashedPassword, &u.Created, &u.Active)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, models.ErrNoRecord
@@ -73,4 +75,29 @@ func (m *UserModel) Get(id int) (*models.User, error) {
 		}
 	}
 	return u, nil
+}
+func (m *UserModel) ChangePassword(id int, oldpass, newpass string) error {
+	u, err := m.Get(id)
+	if err != nil {
+		return err
+	}
+
+	err = bcrypt.CompareHashAndPassword(u.HashedPassword, []byte(oldpass))
+	if err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return models.ErrInvalidCredentials
+		} else {
+			return err
+		}
+	}
+	fmt.Printf("2\n")
+	u.HashedPassword, err = bcrypt.GenerateFromPassword([]byte(newpass), 12)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("3\n")
+	
+	stmt := `update users set hashed_password = ? where id = ?`
+	_, err = m.DB.Exec(stmt, string(u.HashedPassword), u.ID)
+	return err
 }

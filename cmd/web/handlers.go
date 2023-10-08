@@ -184,3 +184,48 @@ func (app *application) userProfile(w http.ResponseWriter, r *http.Request) {
 		User: u,
 	})
 }
+func (app *application) changePassForm(w http.ResponseWriter, r *http.Request) {
+	app.render(w, r, "password.page.tmpl", &templateData{
+		Form: forms.New(nil),
+	})
+}
+func (app *application) changePass(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form := forms.New(r.PostForm)
+	form.Required("old", "new1", "new2")
+	form.MinLength("new1", 10)
+	if form.Get("new1") != form.Get("new2") {
+		form.Errors.Add("new2", "Passwords don't match")
+	}
+	
+	if !form.Valid() {
+		app.render(w, r, "password.page.tmpl", &templateData{
+			Form: form,
+		})
+		return
+	}
+
+	err = app.users.ChangePassword(app.session.GetInt(r, "authenticatedUserID"),
+		form.Get("old"),
+		form.Get("new"))
+	if err != nil {
+		if errors.Is(err, models.ErrInvalidCredentials) {
+			form.Errors.Add("old", "current password is incorrect")
+			app.render(w, r, "password.page.tmpl", &templateData{
+				Form: form,
+			})
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+	app.session.Put(r, "flash", "Your password has been updated!")
+
+	// redirect to the relevant page
+	http.Redirect(w, r, "/user/profile", http.StatusSeeOther)
+}

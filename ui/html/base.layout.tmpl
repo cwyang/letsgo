@@ -24,6 +24,7 @@
       <div>
 	{{if .IsAuthenticated}}
 	<a href='/user/profile'>Profile</a>
+	<a href='/user/changepass'>Change Password</a>
 	<form action='/user/logout' method='POST'>
 	  <button>Logout</button>
 	  <!-- include the CSRF token -->
