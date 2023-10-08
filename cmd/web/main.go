@@ -39,6 +39,7 @@ type application struct {
 		Get(int) (*models.User, error)
 		ChangePassword(int, string, string) error
 	}
+	debug           bool
 	//notes         *mysql.NoteModel
 	//users         *mysql.UserModel
 }
@@ -54,6 +55,8 @@ func main() {
 	}
 	addr := flag.String("addr", ":4000", "HTTP listen port")
 	secret := flag.String("secret", "12345678901234567890123456789012", "Secret key")
+
+	debug := flag.Bool("debug", false, "enable debug mode")
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
@@ -81,6 +84,7 @@ func main() {
 		templateCache: templateCache,
 		notes:         &mysql.NoteModel{DB: db},
 		users:         &mysql.UserModel{DB: db},
+		debug:         *debug,
 	}
 
 	tlsConfig := &tls.Config{
