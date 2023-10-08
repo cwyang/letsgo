@@ -152,6 +152,10 @@ func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
 	}
 	app.session.Put(r, "authenticatedUserID", id)
 
+	path := app.session.PopString(r, "orgURL")
+	if path != "" {
+		http.Redirect(w, r, path, http.StatusSeeOther)
+	}
 	// redirect to the relevant page
 	http.Redirect(w, r, "/note/create", http.StatusSeeOther)
 }
