@@ -1,0 +1,33 @@
+## JSON encoding
+* `encoding/json` package provide two options:
+  * json.Marshal(): appropriate for sending JSON in a HTTP response
+  * json.Encoder type: difficult to manage request headers
+
+## JSON encoding nuances
+- Nil and empty slices are encoded differently
+  - Nil slices --> null JSON value
+  - empty slice --> [], empty JSON array
+- Using omitempty on a zero-valued struct doesn't work
+  - then use a pointer to a struct
+- Using omitempty on a zero-valued time.Time doesn't work
+- Non-ASCII punctuation characters aren't supported in struct tags
+- Integer, time.Time and net.IP values can be used as map keys
+- Angle brackets and ampersands in strings are escaped
+- Trailing zeroes are removed from floats
+- Working with pre-computed JSON
+  - use json.RawMessage
+- The MarshalText fallback
+- The receiver matters when using MarshalJSON
+
+## JSON decoding nuances
+- Decoding into Go arrays
+  - If the Go array is smaller than the JSON array, then the additional
+    JSON array elements are discarded silently
+  - If the Go array is larger than the JSON array, then the additional
+    Go array elements are set to their zero values
+- Partial JSON decoding
+  - Use json.RawMessage
+- Decoding into interface{} types
+  - UseNumber() before decoding
+- Struct tag directives
+  
