@@ -3,6 +3,12 @@
   * json.Marshal(): appropriate for sending JSON in a HTTP response
   * json.Encoder type: difficult to manage request headers
 
+## JSON decoding
+* `encoding/json` package provide two options:
+  * json.Decoder type: generally the best choice for HTTP request body
+  * json.Unmarshal()
+
+
 ## JSON encoding nuances
 - Nil and empty slices are encoded differently
   - Nil slices --> null JSON value
