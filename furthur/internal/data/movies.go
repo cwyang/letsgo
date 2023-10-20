@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/cwyang/letsgo/furthur/internal/validator"
@@ -154,7 +153,7 @@ func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*M
 	query := `
 select id, created_at, title, year, runtime, genres, version
 from movies
-where (lower(title) = lower($1) or $1 = '')
+where (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) or $1 = '')
 and (genres @> $2 or $2 = '{}')
 order by id`
 
@@ -167,7 +166,6 @@ order by id`
 		return nil, err
 	}
 
-	fmt.Printf("<1>\n")
 	defer rows.Close()
 
 	movies := []*Movie{}
@@ -188,10 +186,8 @@ order by id`
 		}
 		movies = append(movies, &movie)
 	}
-	fmt.Printf("<2>\n")
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
-	fmt.Printf("<3>\n")
 	return movies, nil
 }
