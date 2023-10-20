@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/cwyang/letsgo/furthur/internal/validator"
@@ -147,4 +148,50 @@ func ValidateMovie(v *validator.Validator, movie *Movie) {
 	v.Check(movie.Runtime > 0, "runtime", "must be a positive number")
 
 	v.Check(validator.Unique(movie.Genres), "genres", "must not contain duplicate values")
+}
+
+func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*Movie, error) {
+	query := `
+select id, created_at, title, year, runtime, genres, version
+from movies
+where (lower(title) = lower($1) or $1 = '')
+and (genres @> $2 or $2 = '{}')
+order by id`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := m.DB.QueryContext(ctx, query, title, pq.Array(genres))
+	if err != nil {
+
+		return nil, err
+	}
+
+	fmt.Printf("<1>\n")
+	defer rows.Close()
+
+	movies := []*Movie{}
+
+	for rows.Next() {
+		var movie Movie
+		err := rows.Scan(
+			&movie.ID,
+			&movie.CreatedAt,
+			&movie.Title,
+			&movie.Year,
+			&movie.Runtime,
+			pq.Array(&movie.Genres),
+			&movie.Version,
+		)
+		if err != nil {
+			return nil, err
+		}
+		movies = append(movies, &movie)
+	}
+	fmt.Printf("<2>\n")
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	fmt.Printf("<3>\n")
+	return movies, nil
 }
