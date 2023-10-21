@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -20,6 +22,8 @@ func (app *application) serve() error {
 		ErrorLog:     log.New(app.logger, "" /* no prefix */, 0 /* no flag */),
 	}
 
+	shutdownError := make(chan error)
+
 	go func() {
 		quit := make(chan os.Signal, 1)
 
@@ -30,7 +34,11 @@ func (app *application) serve() error {
 		app.logger.PrintInfo("got signal", map[string]string{
 			"signal": s.String(),
 		})
-		os.Exit(0)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		shutdownError <- srv.Shutdown(ctx)
 	}()
 
 	app.logger.PrintInfo("starting server", map[string]string{
@@ -38,5 +46,19 @@ func (app *application) serve() error {
 		"env":  app.config.env,
 	})
 
-	return srv.ListenAndServe()
+	err := srv.ListenAndServe()
+	if !errors.Is(err, http.ErrServerClosed) { // Shutdown() cause this
+		return err
+	}
+
+	err = <-shutdownError
+	if err != nil {
+		return err
+	}
+
+	app.logger.PrintInfo("stopped server", map[string]string{
+		"addr": srv.Addr,
+	})
+
+	return nil
 }
