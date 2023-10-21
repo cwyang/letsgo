@@ -1,0 +1,30 @@
+{{define "subject"}}Welcome to Greenlight!{{end}}
+
+{{define "plainBody"}}
+안녕하세요, 그린라이트 팀입니다.
+
+그린라이트 서비스에 등록해주셔서 감사합니다.
+
+고객님의 등록번호는 '{{.ID}}' 입니다.
+
+감사합니다.
+{{end}}
+
+{{define "htmlBody"}}
+<!doctype html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  </head>
+  <body>
+안녕하세요, 그린라이트 팀입니다.
+
+그린라이트 서비스에 등록해주셔서 감사합니다.
+
+고객님의 등록번호는 <em>{{.ID}}</em> 입니다.
+
+감사합니다.
+  </body>
+</html>
+{{end}}
