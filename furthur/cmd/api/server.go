@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -16,6 +19,20 @@ func (app *application) serve() error {
 		WriteTimeout: 30 * time.Second,
 		ErrorLog:     log.New(app.logger, "" /* no prefix */, 0 /* no flag */),
 	}
+
+	go func() {
+		quit := make(chan os.Signal, 1)
+
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+		s := <-quit
+
+		app.logger.PrintInfo("got signal", map[string]string{
+			"signal": s.String(),
+		})
+		os.Exit(0)
+	}()
+
 	app.logger.PrintInfo("starting server", map[string]string{
 		"addr": srv.Addr,
 		"env":  app.config.env,
