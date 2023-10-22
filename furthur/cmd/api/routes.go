@@ -29,5 +29,8 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPut, "/v1/users/activated", app.activateUserHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationTokenHandler)
 
-	return app.recoverPanic(app.rateLimit(app.authenticate(router)))
+	// CORS를 ratelimiter뒤에 두면 rate-limit를 초과하는 CORS요청은
+	// Access-Control-Allow-Origin 헤더를 달지 않아
+	// 429 Too many request를 받지 않고 브라우저에서 차단된다.
+	return app.recoverPanic(app.enableCORS(app.rateLimit(app.authenticate(router))))
 }
