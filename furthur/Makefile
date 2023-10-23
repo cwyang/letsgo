@@ -7,10 +7,13 @@ run:
 	go run ./cmd/api -db-dsn=${GREENLIGHT_DB_DSN}
 
 ## build: build the cmd/api application
+current_time = $(shell date --iso-8601=seconds)
+git_desc = $(shell git describe --always --dirty --tags --long)
+linker_flags = '-s -X main.buildTime=${current_time} -X main.version=${git_desc}'
 .PHONY: build
 build:
-	go build -o=./bin/api ./cmd/api
-	GOOS=linux GOARCH=amd64 go build -ldflags='-s' -o=./bin/linux_amd64/api ./cmd/api
+	go build -ldflags=${linker_flags} -o=./bin/api ./cmd/api
+	GOOS=linux GOARCH=amd64 go build -ldflags=${linker_flags} -o=./bin/linux_amd64/api ./cmd/api
 
 ## psql: connect to the database using psql
 psql:
