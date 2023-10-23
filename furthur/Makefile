@@ -60,6 +60,25 @@ vendor:
 confirm:
 	@echo -n 'Are you sure? [y/N] ' && read ans && [ $${ans:-N} = y ]
 
+## production/connect: connect to the production server
+production_host_ip = '10.0.0.1'
+.PHONY: production/connect
+production/connect:
+	ssh greenlight@${production_host_ip}
+## production/deploy: deploy to the production server
+.PHONY: production/deploy
+production/deploy:
+	rsync -rP --delete ./bin/linux_amd64/api ./migrations greenlight@${production_host_ip}:~
+	ssh -t greenlight@{production_host_ip} 'migrate -path ~/migrations -database $$GREENLIGHT_DB_DSN up'
+## production/configure: configure production systemd file
+production/configure:
+	rsync -P ./remote/production/api.service greenlight@${production_host_ip}:~
+	ssh -t greenlight@{production_host_ip} '\
+	sudo mv ~/api.service /etc/systemd/sysmem \
+	&& sudo systemctl enable api \
+	&& sudo systemctl restart api \
+	'
+
 ## help: print this help message
 help:
 	@echo 'Usage:'

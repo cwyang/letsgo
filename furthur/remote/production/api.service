@@ -1,0 +1,25 @@
+[Unit]
+Description=Greeenlight API service
+
+After=posgresql.service
+After=network-online.target
+Wants=network-online.target
+
+StartLimitIntervalSec=600
+StartLimitBurst=5
+
+[Service]
+Type=exec
+User=greenlight
+Group=greenlight
+#CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+#AmbientCapabilities=CAP_NET_BIND_SERVICE
+EnvironmentFile=/etc/environment
+Workingdirectory=/home/greenlight
+ExecStart=/home/greenlight/api -port=4000 -db-dsn=${GREENLIGHT_DB_DSN} -env=production
+
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
