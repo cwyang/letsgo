@@ -14,6 +14,17 @@ linker_flags = '-s -X main.buildTime=${current_time} -X main.version=${git_desc}
 build:
 	go build -ldflags=${linker_flags} -o=./bin/api ./cmd/api
 
+## proto: compile protobuf
+proto:
+	protoc api/v1/*.proto \
+	--go_out=. \
+	--go_opt=paths=source_relative \
+	--proto_path=.
+
+## test: test
+test:
+	go test -race ./...
+
 ## audit: tidy dependencies and format, vet and test all code
 .PHONY: audit
 audit: vendor
